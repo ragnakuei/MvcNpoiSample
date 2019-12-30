@@ -13,10 +13,9 @@ namespace MvcNpoiSample.Controllers
         {
             var excelFile = GenerateFilDTO();
             GenerateExcel(excelFile);
-
-            var fileStream = System.IO.File.OpenRead(excelFile.FileNameWithPath);
-
-            return File(fileStream, excelFile.ContentType, excelFile.FileName);
+            
+            var resultStream = new MemoryStream(excelFile.FileByteArray);
+            return File(resultStream, excelFile.ContentType, excelFile.FileName);
         }
         
         private static FileDTO GenerateFilDTO()
@@ -25,9 +24,6 @@ namespace MvcNpoiSample.Controllers
             result.FileName = "Sample.xlsx";
             result.ContentType = MimeMapping.GetMimeMapping(result.FileName);
 
-            var siteRootPath = AppDomain.CurrentDomain.BaseDirectory;
-            var filesFolderPath = Path.Combine(siteRootPath, "Files");
-            result.FileNameWithPath = Path.Combine(filesFolderPath, result.FileName);
             return result;
         }
 
@@ -44,18 +40,18 @@ namespace MvcNpoiSample.Controllers
             row.CreateCell(0).SetCellValue("abey");
             row.CreateCell(1).SetCellValue(85);
             
-            var fileStream = System.IO.File.Create(excelDTO.FileNameWithPath);
-            workbook.Write(fileStream);
-            fileStream.Close();
+            var excelFileStream = new MemoryStream();
+            workbook.Write(excelFileStream);
+            excelFileStream.Close();
+
+            excelDTO.FileByteArray = excelFileStream.ToArray();
         }
 
         public class FileDTO
         {
-            public long FileStreamLength;
             public string ContentType { get; internal set; }
-            public Stream FileStream { get; internal set; } = new MemoryStream();
             public string FileName { get; internal set; }
-            public string FileNameWithPath { get; internal set; }
+            public byte[] FileByteArray { get; set; }
         }
     }
 }
